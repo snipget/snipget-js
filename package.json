@@ -1,0 +1,69 @@
+{
+  "name": "snipget",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript client for the Snipget API — data normalization, parsing, validation, and classification utilities for AI agents and developers.",
+  "license": "MIT",
+  "author": "Snipget Inc. <hello@snipget.ai>",
+  "homepage": "https://snipget.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snipget/snipget-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/snipget/snipget-js/issues"
+  },
+  "keywords": [
+    "api",
+    "ai-agents",
+    "llm",
+    "data-normalization",
+    "data-validation",
+    "parsing",
+    "healthcare",
+    "npi",
+    "mcp",
+    "agent-tools",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.2.0"
+  }
+}
