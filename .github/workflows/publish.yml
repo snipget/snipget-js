@@ -1,0 +1,60 @@
+# Publish the `snipget` package to npm.
+#
+# Triggered by publishing a GitHub Release tagged `vX.Y.Z` (matching
+# package.json's version — the guard below fails the run on a mismatch).
+#
+# Auth: npm Trusted Publishing (OIDC) — configure on npmjs.com under the
+# package's Settings → Trusted Publisher (org `snipget`, repo
+# `snipget-js`, workflow `publish.yml`, environment `npm`). Until the
+# package exists, npm can't be configured that way, so the FIRST publish
+# happens locally (`npm publish` from a logged-in maintainer); every
+# release after that flows through here tokenlessly. Provenance
+# attestations kick in automatically once the repo is public.
+
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Build, verify, publish
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/snipget
+    permissions:
+      contents: read
+      # Required for npm Trusted Publishing — mints the OIDC token the
+      # npm CLI exchanges for a short-lived publish credential.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify release tag matches package version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG" ]; then
+            echo "::error::Release tag v$TAG does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Install, check, build
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm test
+          npm run build
+
+      # Trusted Publishing needs a current npm CLI (OIDC support).
+      - name: Publish
+        run: |
+          npm install -g npm@latest
+          npm publish
