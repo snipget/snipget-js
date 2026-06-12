@@ -64,7 +64,7 @@ Defaults: `POST` when a payload is given, `GET` otherwise (utility endpoints are
 
 ## Authentication
 
-Get an API key at [snipget.ai](https://snipget.ai). The client sends it as `Authorization: Bearer <key>` (the API also accepts `X-API-Key`). Provide it either way:
+Get an API key at [snipget.ai](https://snipget.ai). The client sends it as `Authorization: Bearer <key>` by default; pass `authHeader: "x-api-key"` to use the `X-API-Key` header instead (same option as the Python SDK). Provide the key either way:
 
 ```js
 new Snipget({ apiKey: "sk_..." });      // explicit

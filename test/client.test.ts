@@ -51,6 +51,20 @@ describe("request construction", () => {
     expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer sk_test_123");
   });
 
+  it("sends X-API-Key instead when authHeader is 'x-api-key'", async () => {
+    // Parity with the Python SDK's auth_header option — for environments
+    // whose proxies strip or reserve the Authorization header.
+    const mock = stubFetch(fakeResponse(200, npiValidateEnvelope()));
+    const client = new Snipget({ apiKey: "sk_test_123", authHeader: "x-api-key" });
+
+    await client.call("/healthcare/npi/validate", { npi: "1234567893" });
+
+    const [, init] = mock.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers["X-API-Key"]).toBe("sk_test_123");
+    expect(headers["Authorization"]).toBeUndefined();
+  });
+
   it("defaults to POST with a JSON body when a payload is given", async () => {
     const mock = stubFetch(fakeResponse(200, npiValidateEnvelope()));
     const client = new Snipget({ apiKey: "sk_test" });

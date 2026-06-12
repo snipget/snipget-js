@@ -68,7 +68,7 @@ describe("error mapping", () => {
     expect((err as InvalidRequestError).details).toEqual(details);
   });
 
-  it("maps 429 RATE_LIMITED to RateLimitError with retryAfter from the header", async () => {
+  it("maps 429 RATE_LIMITED to RateLimitError preferring the body's precise retry_after_seconds", async () => {
     const err = await callAndCatch(
       429,
       errorEnvelope("RATE_LIMITED", "Too many requests.", {
@@ -80,18 +80,21 @@ describe("error mapping", () => {
       { "Retry-After": "1" },
     );
     expect(err).toBeInstanceOf(RateLimitError);
-    // Header wins over the body's retry_after_seconds.
-    expect((err as RateLimitError).retryAfter).toBe(1);
+    // The body float wins over the rounded-up header — the server rounds
+    // Retry-After UP to whole seconds, so honoring the header would
+    // over-sleep. Same precedence as the Python SDK.
+    expect((err as RateLimitError).retryAfter).toBe(0.42);
     expect((err as RateLimitError).httpStatus).toBe(429);
   });
 
-  it("falls back to the body's retry_after_seconds when the header is absent", async () => {
+  it("falls back to the Retry-After header when the body field is absent", async () => {
     const err = await callAndCatch(
       429,
-      errorEnvelope("RATE_LIMITED", "Too many requests.", { retry_after_seconds: 0.42 }),
+      errorEnvelope("RATE_LIMITED", "Too many requests."),
+      { "Retry-After": "1" },
     );
     expect(err).toBeInstanceOf(RateLimitError);
-    expect((err as RateLimitError).retryAfter).toBe(0.42);
+    expect((err as RateLimitError).retryAfter).toBe(1);
   });
 
   it("maps 429 QUOTA_EXCEEDED to QuotaExceededError with creditRemainingUsd from meta", async () => {

@@ -65,7 +65,7 @@ export class InvalidRequestError extends SnipgetError {
  * seconds; the client retries it automatically, honoring `Retry-After`.
  */
 export class RateLimitError extends SnipgetError {
-  /** Seconds to wait before retrying (`Retry-After` header, falling back to the body's `retry_after_seconds`). */
+  /** Seconds to wait before retrying (the body's precise `retry_after_seconds`, falling back to the `Retry-After` header). */
   readonly retryAfter?: number;
 
   constructor(message: string, options: SnipgetErrorOptions & { retryAfter?: number } = {}) {
@@ -165,17 +165,19 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 /**
- * Resolve the retry delay in seconds: prefer the `Retry-After` HTTP header
- * (always integer seconds per RFC 7231), fall back to the envelope's
- * top-level `retry_after_seconds` field.
+ * Resolve the retry delay in seconds: prefer the envelope's top-level
+ * `retry_after_seconds` (a precise float), fall back to the `Retry-After`
+ * HTTP header — the server rounds the header UP to whole seconds, so the
+ * body value is strictly more accurate. Matches the Python SDK
+ * (snipget-client) so both clients pace identically.
  */
 function parseRetryAfter(header: string | null, bodyValue: unknown): number | undefined {
+  if (typeof bodyValue === "number" && Number.isFinite(bodyValue) && bodyValue >= 0) {
+    return bodyValue;
+  }
   if (header !== null) {
     const n = Number(header);
     if (Number.isFinite(n) && n >= 0) return n;
-  }
-  if (typeof bodyValue === "number" && Number.isFinite(bodyValue) && bodyValue >= 0) {
-    return bodyValue;
   }
   return undefined;
 }

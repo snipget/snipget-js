@@ -21,6 +21,13 @@ export interface SnipgetOptions {
    * `RATE_LIMITED` 429s, and 5xx responses. Default: `2`. Set `0` to disable.
    */
   maxRetries?: number;
+  /**
+   * Which header carries the API key: `"authorization"` (default —
+   * `Authorization: Bearer <key>`) or `"x-api-key"` for environments whose
+   * proxies strip or reserve the Authorization header. Same option as the
+   * Python SDK's `auth_header`.
+   */
+  authHeader?: "authorization" | "x-api-key";
 }
 
 /** Per-call options for {@link import("./client").Snipget.call}. */

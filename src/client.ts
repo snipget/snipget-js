@@ -33,6 +33,7 @@ export class Snipget {
   readonly baseUrl: string;
   readonly timeoutMs: number;
   readonly maxRetries: number;
+  readonly authHeader: "authorization" | "x-api-key";
   readonly #apiKey: string;
 
   constructor(options: SnipgetOptions = {}) {
@@ -48,6 +49,7 @@ export class Snipget {
     this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
+    this.authHeader = options.authHeader ?? "authorization";
   }
 
   /**
@@ -113,10 +115,12 @@ export class Snipget {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${this.#apiKey}`,
-        Accept: "application/json",
-      };
+      const headers: Record<string, string> = { Accept: "application/json" };
+      if (this.authHeader === "x-api-key") {
+        headers["X-API-Key"] = this.#apiKey;
+      } else {
+        headers["Authorization"] = `Bearer ${this.#apiKey}`;
+      }
       let body: string | undefined;
       if (payload !== undefined) {
         headers["Content-Type"] = "application/json";
