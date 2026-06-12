@@ -2,6 +2,8 @@
 
 Official JavaScript/TypeScript client for the [Snipget API](https://snipget.ai) — data normalization, parsing, validation, and classification utilities for AI agents and developers.
 
+> **Status: pre-launch.** The hosted API is live but not yet accepting self-serve signups — [join the waitlist at snipget.ai](https://snipget.ai/waitlist) to get an API key at launch.
+
 ## What is Snipget?
 
 Snipget is a hosted utility API built for AI agents and the developers who build them. It serves 130+ programmatic endpoints for the unglamorous data work that agents do constantly: validating identifiers (NPI, DEA, IBAN, VIN, Luhn), parsing and cleaning names, standardizing addresses and phone numbers, normalizing timezones and currencies, classifying nulls and emails, slugifying text, and much more — with particular depth in healthcare (NPI validation and lookup, taxonomy codes, credential parsing, DEA numbers). Every endpoint is deterministic, fast, and returns a consistent response envelope with a confidence score.
