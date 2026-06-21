@@ -43,6 +43,32 @@ describe("retry policy", () => {
     await expect(promise).resolves.toMatchObject({ confidence: 1.0 });
   });
 
+  it("retries 503 UPSTREAM_RATE_LIMITED and honors the upstream's Retry-After", async () => {
+    const mock = stubFetch(
+      fakeResponse(
+        503,
+        errorEnvelope("UPSTREAM_RATE_LIMITED", "RxNorm is throttling requests.", {
+          retry_after_seconds: 2,
+        }),
+        { "Retry-After": "2" },
+      ),
+      fakeResponse(200, npiValidateEnvelope()),
+    );
+    const client = new Snipget({ apiKey: "sk_test", maxRetries: 2 });
+
+    const promise = client.call(PATH, PAYLOAD);
+    await vi.advanceTimersByTimeAsync(0); // flush the first attempt
+    expect(mock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1999); // 1ms short of the 2s hint
+    expect(mock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1); // exactly 2000ms — retry fires
+    expect(mock).toHaveBeenCalledTimes(2);
+
+    await expect(promise).resolves.toMatchObject({ confidence: 1.0 });
+  });
+
   it("never retries 429 QUOTA_EXCEEDED — monthly quota cannot recover in-process", async () => {
     const mock = stubFetch(
       fakeResponse(

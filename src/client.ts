@@ -5,6 +5,7 @@ import {
   QuotaExceededError,
   RateLimitError,
   SnipgetError,
+  UpstreamRateLimitedError,
   errorFromResponse,
 } from "./errors";
 import type { CallOptions, SnipgetMeta, SnipgetOptions, SnipgetResponse } from "./types";
@@ -177,7 +178,11 @@ function isRetryable(error: SnipgetError): boolean {
 }
 
 function retryAfterOf(error: SnipgetError): number | undefined {
-  if (error instanceof RateLimitError || error instanceof MaintenanceError) {
+  if (
+    error instanceof RateLimitError ||
+    error instanceof MaintenanceError ||
+    error instanceof UpstreamRateLimitedError
+  ) {
     return error.retryAfter;
   }
   return undefined;

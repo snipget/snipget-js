@@ -6,7 +6,7 @@ Official JavaScript/TypeScript client for the [Snipget API](https://snipget.ai) 
 
 ## What is Snipget?
 
-Snipget is a hosted utility API built for AI agents and the developers who build them. It serves 130+ programmatic endpoints for the unglamorous data work that agents do constantly: validating identifiers (NPI, DEA, IBAN, VIN, Luhn), parsing and cleaning names, standardizing addresses and phone numbers, normalizing timezones and currencies, classifying nulls and emails, slugifying text, and much more — with particular depth in healthcare (NPI validation and lookup, taxonomy codes, credential parsing, DEA numbers). Every endpoint is deterministic, fast, and returns a consistent response envelope with a confidence score.
+Snipget is a hosted utility API built for AI agents and the developers who build them. It serves 130+ programmatic endpoints for the unglamorous data work that agents do constantly: validating identifiers (NPI, DEA, IBAN, VIN, Luhn), parsing and cleaning names, standardizing addresses and phone numbers, normalizing timezones and currencies, classifying nulls and emails, slugifying text, and much more — with particular depth in the life sciences: **healthcare** (NPI validation and lookup, taxonomy codes, credential parsing, DEA numbers), **chemistry** (compound lookup, CAS and SMILES validation, molecular weight, GHS hazard data via PubChem), and **biotech** (genes via HGNC, proteins via UniProt, drugs via RxNorm, clinical trials via ClinicalTrials.gov). Every endpoint is deterministic, fast, and returns a consistent response envelope with a confidence score.
 
 Snipget is OpenAPI-first: the [interactive docs](https://api.snipget.ai/docs) and [OpenAPI spec](https://api.snipget.ai/openapi.json) are the authoritative catalog of every endpoint, payload, and example. An MCP server is also available, so agents can discover and call Snipget utilities as tools. This package is a thin HTTP wrapper around the hosted API — zero runtime dependencies, zero client-side business logic. The API is the product; the SDK just makes calling it pleasant.
 
@@ -86,8 +86,12 @@ Every error thrown by the client is a typed subclass of `SnipgetError`, each car
 | `RateLimitError` | 429 `RATE_LIMITED` — per-second throttle | `retryAfter` (seconds) |
 | `QuotaExceededError` | 429 `QUOTA_EXCEEDED` — monthly quota/allowance exhausted | `creditRemainingUsd` (when reported) |
 | `MaintenanceError` | 503 `MAINTENANCE_MODE` — maintenance window | `retryAfter` (seconds, typically 300) |
+| `UpstreamError` | 503 `UPSTREAM_UNAVAILABLE` — an external data source is down (subclass of `APIError`) | |
+| `UpstreamRateLimitedError` | 503 `UPSTREAM_RATE_LIMITED` — an external source is throttling Snipget (subclass of `UpstreamError`) | `retryAfter` (seconds) |
 | `APIError` | other 5xx / unexpected responses | |
 | `SnipgetError` (base) | also thrown directly for transport failures (`errorCode` `"TIMEOUT"` or `"NETWORK_ERROR"`) | |
+
+A few utilities call external data sources (PubChem, RxNorm, ClinicalTrials.gov, the FX feed, NPPES). `UpstreamError` and `UpstreamRateLimitedError` both subclass `APIError`, so an `instanceof APIError` catch still covers them; both are transient and retried automatically (the rate-limited one honors the upstream's `Retry-After`).
 
 ```js
 import {
@@ -119,7 +123,7 @@ try {
 
 ## Retries and timeouts
 
-The client automatically retries **network errors**, **429 `RATE_LIMITED`** (honoring `Retry-After`), and **5xx** responses, with exponential backoff and jitter. It never retries `QUOTA_EXCEEDED` or other 4xx errors — those cannot succeed by retrying. Snipget utility calls are pure and idempotent (they compute over the payload and write nothing), so retrying POSTs is safe.
+The client automatically retries **network errors**, **429 `RATE_LIMITED`** and **503 `UPSTREAM_RATE_LIMITED`** (both honoring `Retry-After`), and **5xx** responses (including `UPSTREAM_UNAVAILABLE`), with exponential backoff and jitter. It never retries `QUOTA_EXCEEDED` or other 4xx errors — those cannot succeed by retrying. Snipget utility calls are pure and idempotent (they compute over the payload and write nothing), so retrying POSTs is safe.
 
 ```js
 const client = new Snipget({

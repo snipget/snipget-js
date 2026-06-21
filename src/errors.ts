@@ -107,6 +107,30 @@ export class MaintenanceError extends SnipgetError {
 export class APIError extends SnipgetError {}
 
 /**
+ * 503 `UPSTREAM_UNAVAILABLE` — an external data source a utility depends on
+ * (PubChem, RxNorm, ClinicalTrials.gov, the FX feed, NPPES…) is down, blocking
+ * us, or timed out. A subclass of {@link APIError} (it *is* a 5xx), so existing
+ * `instanceof APIError` catches keep working. Transient and retried automatically.
+ */
+export class UpstreamError extends APIError {}
+
+/**
+ * 503 `UPSTREAM_RATE_LIMITED` — an external data source is throttling Snipget
+ * (it returned a 429). The caller's own request rate is fine; this is a
+ * service-side throttle, distinct from {@link RateLimitError}. Transient and
+ * retried automatically, honoring `retryAfter` when the upstream supplied it.
+ */
+export class UpstreamRateLimitedError extends UpstreamError {
+  /** Seconds to wait before retrying (the body's `retry_after_seconds`, falling back to the `Retry-After` header). */
+  readonly retryAfter?: number;
+
+  constructor(message: string, options: SnipgetErrorOptions & { retryAfter?: number } = {}) {
+    super(message, options);
+    this.retryAfter = options.retryAfter;
+  }
+}
+
+/**
  * Map an HTTP error response to the matching {@link SnipgetError} subclass.
  *
  * @internal Exported for the client; not part of the public package surface.
@@ -156,6 +180,17 @@ export function errorFromResponse(
       ...base,
       retryAfter: parseRetryAfter(retryAfterHeader, env.retry_after_seconds),
     });
+  }
+  if (httpStatus === 503 && errorCode === "UPSTREAM_RATE_LIMITED") {
+    // An external data source is throttling us (it returned a 429). Honor its
+    // Retry-After hint when present — distinct from a generic outage.
+    return new UpstreamRateLimitedError(message, {
+      ...base,
+      retryAfter: parseRetryAfter(retryAfterHeader, env.retry_after_seconds),
+    });
+  }
+  if (httpStatus === 503 && errorCode === "UPSTREAM_UNAVAILABLE") {
+    return new UpstreamError(message, base);
   }
   return new APIError(message, base);
 }

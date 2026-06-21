@@ -9,6 +9,8 @@ import {
   RateLimitError,
   Snipget,
   SnipgetError,
+  UpstreamError,
+  UpstreamRateLimitedError,
 } from "../src/index";
 import { errorEnvelope, fakeResponse, stubFetch } from "./helpers";
 
@@ -135,13 +137,37 @@ describe("error mapping", () => {
     expect((err as MaintenanceError).httpStatus).toBe(503);
   });
 
-  it("maps a 503 that is NOT maintenance (e.g. UPSTREAM_UNAVAILABLE) to APIError", async () => {
+  it("maps 503 UPSTREAM_UNAVAILABLE to UpstreamError (still an APIError)", async () => {
     const err = await callAndCatch(
       503,
       errorEnvelope("UPSTREAM_UNAVAILABLE", "Currency rate feed unreachable."),
     );
+    expect(err).toBeInstanceOf(UpstreamError);
+    expect(err).toBeInstanceOf(APIError); // backward-compatible catch
+    expect(err).not.toBeInstanceOf(UpstreamRateLimitedError);
+    expect((err as UpstreamError).errorCode).toBe("UPSTREAM_UNAVAILABLE");
+  });
+
+  it("maps 503 UPSTREAM_RATE_LIMITED to UpstreamRateLimitedError with retryAfter", async () => {
+    const err = await callAndCatch(
+      503,
+      errorEnvelope("UPSTREAM_RATE_LIMITED", "RxNorm is throttling requests.", {
+        retry_after_seconds: 5,
+      }),
+      { "Retry-After": "5" },
+    );
+    expect(err).toBeInstanceOf(UpstreamRateLimitedError);
+    expect(err).toBeInstanceOf(UpstreamError); // and therefore APIError
+    expect(err).not.toBeInstanceOf(RateLimitError); // NOT our own throttle
+    expect((err as UpstreamRateLimitedError).retryAfter).toBe(5);
+    expect((err as UpstreamRateLimitedError).errorCode).toBe("UPSTREAM_RATE_LIMITED");
+  });
+
+  it("maps a 503 that is neither maintenance nor upstream to plain APIError", async () => {
+    const err = await callAndCatch(503, errorEnvelope("BILLING_UNAVAILABLE", "Billing is down."));
     expect(err).toBeInstanceOf(APIError);
     expect(err).not.toBeInstanceOf(MaintenanceError);
+    expect(err).not.toBeInstanceOf(UpstreamError);
   });
 
   it("maps 500 INTERNAL_ERROR to APIError", async () => {
