@@ -32,10 +32,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # NOTE: deliberately NO `registry-url`. Passing it makes setup-node write
+      # an .npmrc with `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` +
+      # `always-auth`. With no NODE_AUTH_TOKEN (we publish tokenlessly via OIDC),
+      # that empty-token config suppresses npm's Trusted-Publishing path — npm
+      # tries to auth with an empty token and the registry returns 404. Omitting
+      # registry-url leaves no auth config, so `npm publish` performs the OIDC
+      # exchange against the default registry. The default registry already IS
+      # registry.npmjs.org, so nothing else is needed.
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Verify release tag matches package version
         run: |
