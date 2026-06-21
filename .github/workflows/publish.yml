@@ -32,17 +32,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # NOTE: deliberately NO `registry-url`. Passing it makes setup-node write
-      # an .npmrc with `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` +
-      # `always-auth`. With no NODE_AUTH_TOKEN (we publish tokenlessly via OIDC),
-      # that empty-token config suppresses npm's Trusted-Publishing path — npm
-      # tries to auth with an empty token and the registry returns 404. Omitting
-      # registry-url leaves no auth config, so `npm publish` performs the OIDC
-      # exchange against the default registry. The default registry already IS
-      # registry.npmjs.org, so nothing else is needed.
+      # registry-url is required: npm's OIDC Trusted-Publishing detection keys
+      # off the explicitly-configured registry. (On a capable npm >= 11.5.1 the
+      # OIDC path takes precedence over the empty `_authToken` setup-node writes;
+      # the earlier empty-token 404 was only because Node 22's npm 10.x had no
+      # OIDC support and fell back to that token. Omitting registry-url instead
+      # gives ENEEDAUTH because npm never initiates the exchange.)
       - uses: actions/setup-node@v5
         with:
           node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
       # OIDC Trusted Publishing needs npm >= 11.5.1. Upgrade in its OWN step so
       # the refreshed npm is on PATH for the publish step below (doing the
@@ -79,4 +78,6 @@ jobs:
       # id-token for a short-lived credential against the package's Trusted
       # Publisher config. No NODE_AUTH_TOKEN, no registry-url auth.
       - name: Publish
-        run: npm publish
+        run: |
+          echo "OIDC id-token endpoint present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}${ACTIONS_ID_TOKEN_REQUEST_URL:-NO}"
+          npm publish
