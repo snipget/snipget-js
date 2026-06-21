@@ -1,6 +1,6 @@
 {
   "name": "snipget",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Official JavaScript/TypeScript client for the Snipget API — data normalization, parsing, validation, and classification utilities for AI agents and developers.",
   "license": "MIT",
   "author": "Snipget Inc. <hello@snipget.ai>",
@@ -20,6 +20,8 @@
     "data-validation",
     "parsing",
     "healthcare",
+    "chemistry",
+    "biotech",
     "npi",
     "mcp",
     "agent-tools",
@@ -45,7 +47,8 @@
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "engines": {
