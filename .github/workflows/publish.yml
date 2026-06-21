@@ -45,11 +45,17 @@ jobs:
           node-version: "22"
 
       - name: Verify release tag matches package version
+        # Read the tag from the release event payload, not GITHUB_REF_NAME:
+        # for a `release` event whose tag targets a branch, the ref can resolve
+        # to the branch (GITHUB_REF_NAME=main) rather than the tag, which made
+        # this guard misfire. github.event.release.tag_name is the canonical tag.
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${TAG_NAME#v}"
           if [ "$PKG_VERSION" != "$TAG" ]; then
-            echo "::error::Release tag v$TAG does not match package.json version $PKG_VERSION"
+            echo "::error::Release tag $TAG_NAME does not match package.json version $PKG_VERSION"
             exit 1
           fi
 
