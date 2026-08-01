@@ -2,11 +2,13 @@
 
 Official JavaScript/TypeScript client for the [Snipget API](https://snipget.ai) — data normalization, parsing, validation, and classification utilities for AI agents and developers.
 
-> **Status: pre-launch.** The hosted API is live but not yet accepting self-serve signups — [join the waitlist at snipget.ai](https://snipget.ai/waitlist) to get an API key at launch.
+> This SDK fronts the hosted **Snipget MCP server** (`https://mcp.snipget.ai/mcp`) — AI agents can connect directly, no install and no API key needed; see [llms-install.md](llms-install.md).
+
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add Snipget to Cursor" height="32">](https://cursor.com/install-mcp?name=snipget&config=eyJ1cmwiOiJodHRwczovL21jcC5zbmlwZ2V0LmFpL21jcCJ9)
 
 ## What is Snipget?
 
-Snipget is a hosted utility API built for AI agents and the developers who build them. It serves 130+ programmatic endpoints for the unglamorous data work that agents do constantly: validating identifiers (NPI, DEA, IBAN, VIN, Luhn), parsing and cleaning names, standardizing addresses and phone numbers, normalizing timezones and currencies, classifying nulls and emails, slugifying text, and much more — with particular depth in the life sciences: **healthcare** (NPI validation and lookup, taxonomy codes, credential parsing, DEA numbers), **chemistry** (compound lookup, CAS and SMILES validation, molecular weight, GHS hazard data via PubChem), and **biotech** (genes via HGNC, proteins via UniProt, drugs via RxNorm, clinical trials via ClinicalTrials.gov). Every endpoint is deterministic, fast, and returns a consistent response envelope with a confidence score.
+Snipget is a hosted utility API built for AI agents and the developers who build them. It serves 300+ programmatic endpoints for the unglamorous data work that agents do constantly: validating identifiers (NPI, DEA, IBAN, VIN, Luhn), parsing and cleaning names, standardizing addresses and phone numbers, normalizing timezones and currencies, classifying nulls and emails, slugifying text, and much more — with particular depth in the life sciences: **healthcare** (NPI validation and lookup, taxonomy codes, credential parsing, DEA numbers), **chemistry** (compound lookup, CAS and SMILES validation, molecular weight, GHS hazard data via PubChem), and **biotech** (genes via HGNC, proteins via UniProt, drugs via RxNorm, clinical trials via ClinicalTrials.gov). Every endpoint is deterministic, fast, and returns a consistent response envelope with a confidence score.
 
 Snipget is OpenAPI-first: the [interactive docs](https://api.snipget.ai/docs) and [OpenAPI spec](https://api.snipget.ai/openapi.json) are the authoritative catalog of every endpoint, payload, and example. An MCP server is also available, so agents can discover and call Snipget utilities as tools. This package is a thin HTTP wrapper around the hosted API — zero runtime dependencies, zero client-side business logic. The API is the product; the SDK just makes calling it pleasant.
 
