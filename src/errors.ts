@@ -75,7 +75,7 @@ export class RateLimitError extends SnipgetError {
 }
 
 /**
- * 429 `QUOTA_EXCEEDED` — monthly included calls or prepaid overage allowance
+ * 429 `QUOTA_EXCEEDED` — monthly included cost units or prepaid overage allowance
  * exhausted. NOT retryable: it does not lift until the next UTC month, a tier
  * upgrade, or an allowance purchase. The client never retries it.
  */

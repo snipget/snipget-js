@@ -155,10 +155,10 @@ Every Snipget endpoint returns the same JSON envelope. `client.call()` unwraps i
 | --- | --- |
 | `version` | API version |
 | `elapsed_ms` | Server-side processing time |
-| `cost_units` | Billable cost of the call (batch = 1 unit per item) |
+| `cost_units` | Cost units charged for this call: one per item processed (a batch of N items = N; live-registry lookups bill 2 per item). A call is one request; cost units are what your plan includes |
 | `request_id` | Unique `req_...` id — quote it in support requests |
 | `rate_limit_remaining` / `rate_limit_reset` | Per-second throttle headroom / reset timestamp |
-| `quota_remaining` / `quota_reset` | Monthly included-calls headroom / reset timestamp |
+| `quota_remaining` / `quota_reset` | Cost units left in the monthly included bucket / reset timestamp |
 | `credit_remaining_usd` | Prepaid overage-allowance balance, once you're burning it |
 
 Error responses use a sibling envelope (`status: "error"`, `error_code`, `message`, `meta`) which the client maps to the typed errors above — you never parse it by hand.
