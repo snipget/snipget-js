@@ -51,7 +51,7 @@ export interface SnipgetMeta {
   version?: string;
   /** Server-side processing time in milliseconds. */
   elapsed_ms?: number;
-  /** Billable cost of the call (batch calls cost one unit per item). */
+  /** Cost units charged for this call: one per item processed (a batch of N items = N; live-registry lookups bill 2 per item). A call is one request; cost units are what your plan includes. */
   cost_units?: number;
   /** Unique request id (`req_...`) — quote it in support requests. */
   request_id?: string | null;
@@ -61,7 +61,7 @@ export interface SnipgetMeta {
   rate_limit_remaining?: number | null;
   /** Unix timestamp when the rate window resets. */
   rate_limit_reset?: number | null;
-  /** Included monthly calls remaining; `null`/absent on unlimited tiers. */
+  /** Cost units left in the monthly included bucket; `null`/absent on unlimited tiers. */
   quota_remaining?: number | null;
   /** Unix timestamp of the next monthly quota reset (start of next UTC month). */
   quota_reset?: number | null;
